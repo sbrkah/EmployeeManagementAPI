@@ -1,0 +1,64 @@
+-- DROP SCHEMA dbo;
+
+CREATE SCHEMA dbo;
+-- emanager.dbo.st_class definition
+
+-- Drop table
+
+-- DROP TABLE emanager.dbo.st_class;
+
+CREATE TABLE emanager.dbo.st_class (
+	id varchar(36) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	name varchar(100) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	is_deleted numeric(38,0) NULL,
+	CONSTRAINT st_class_pk PRIMARY KEY (id)
+);
+
+
+-- emanager.dbo.st_status definition
+
+-- Drop table
+
+-- DROP TABLE emanager.dbo.st_status;
+
+CREATE TABLE emanager.dbo.st_status (
+	id varchar(36) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	name varchar(100) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	is_deleted numeric(38,0) NULL,
+	CONSTRAINT st_status_pk PRIMARY KEY (id)
+);
+
+
+-- emanager.dbo.t_employee definition
+
+-- Drop table
+
+-- DROP TABLE emanager.dbo.t_employee;
+
+CREATE TABLE emanager.dbo.t_employee (
+	id varchar(36) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	name varchar(64) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	class varchar(36) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	age numeric(38,0) NULL,
+	salary numeric(38,0) NULL,
+	is_deleted numeric(38,0) NULL,
+	status varchar(36) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	CONSTRAINT t_employee_pk PRIMARY KEY (id)
+);
+
+
+-- emanager.dbo.t_auth definition
+
+-- Drop table
+
+-- DROP TABLE emanager.dbo.t_auth;
+
+CREATE TABLE emanager.dbo.t_auth (
+	id varchar(36) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+	username varchar(36) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	password varchar(64) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	employee_id varchar(36) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	access_level varchar(64) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+	CONSTRAINT t_auth_pk PRIMARY KEY (id),
+	CONSTRAINT t_auth_t_employee_FK FOREIGN KEY (employee_id) REFERENCES emanager.dbo.t_employee(id)
+);
