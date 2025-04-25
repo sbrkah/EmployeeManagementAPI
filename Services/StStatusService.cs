@@ -72,6 +72,15 @@ namespace EmployeeManagementAPI.Services
 
             stStats.IsDeleted = 1;
             await _context.SaveChangesAsync();
+
+            List<TEmployee> employees = await _context.TEmployees.Where(x => x.Status == id).ToListAsync();
+
+            foreach (TEmployee emp in employees)
+            {
+                emp.Status = string.Empty;
+            }
+
+            await _context.SaveChangesAsync();
         }
 
         public async Task<bool> StatusExistsAsync(string id)
