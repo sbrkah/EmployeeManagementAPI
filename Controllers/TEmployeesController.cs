@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using EmployeeManagementAPI.Models;
 using EmployeeManagementAPI.Models.DTO;
 using EmployeeManagementAPI.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,6 +11,7 @@ namespace EmployeeManagementAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class TEmployeesController : ControllerBase
     {
         private readonly ITEmployeeService _employeeService;

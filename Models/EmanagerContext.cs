@@ -24,7 +24,6 @@ public partial class EmanagerContext : DbContext
     public virtual DbSet<TEmployee> TEmployees { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseSqlServer("Data Source=DESKTOP-SCVCKCQ\\SQLEXPRESS;Initial Catalog=emanager;Integrated Security=True;Encrypt=True;Trust Server Certificate=True");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -89,6 +88,10 @@ public partial class EmanagerContext : DbContext
                 .HasMaxLength(36)
                 .IsUnicode(false)
                 .HasColumnName("username");
+            entity.Property(e => e.AccessLevel)
+                .HasMaxLength(64)
+                .IsUnicode(false)
+                .HasColumnName("access_level");
         });
 
         modelBuilder.Entity<TEmployee>(entity =>

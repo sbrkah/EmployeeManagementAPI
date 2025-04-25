@@ -12,4 +12,6 @@ public partial class TAuth
     public string? Password { get; set; }
 
     public string? EmployeeId { get; set; }
+
+    public string? AccessLevel { get; set; }
 }
