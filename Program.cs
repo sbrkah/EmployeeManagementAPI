@@ -80,6 +80,7 @@ namespace EmployeeManagementAPI
             builder.Services.AddScoped<IStStatusService, StStatusService>();
             builder.Services.AddScoped<ITEmployeeService, TEmployeeService>();
             builder.Services.AddScoped<AuthService>();
+            builder.Services.AddHttpClient();
 
             builder.Services.AddStackExchangeRedisCache(options =>
             {
