@@ -21,11 +21,13 @@ namespace EmployeeManagementAPI.Services
         private readonly EmanagerContext _context;
         private readonly IDistributedCache _cache;
         private readonly TimeSpan _cacheExpiry = TimeSpan.FromMinutes(15);
+        private readonly ILogger<TEmployeeService> _logger;
 
-        public TEmployeeService(EmanagerContext context, IDistributedCache cache)
+        public TEmployeeService(EmanagerContext context, IDistributedCache cache, ILogger<TEmployeeService> logger)
         {
             _context = context;
             _cache = cache;
+            _logger = logger;
         }
 
         public async void RemoveCache(string id)
@@ -42,6 +44,7 @@ namespace EmployeeManagementAPI.Services
                 .Where(x => x.IsDeleted == 0)
                 .ToListAsync();
 
+            _logger.LogInformation($"Mengambil data employee..");
             return employees.Select(x => x.ResConvert());
         }
 
@@ -89,6 +92,7 @@ namespace EmployeeManagementAPI.Services
 
             _context.Entry(existingEmploy).CurrentValues.SetValues(updatedEmployee);
             await _context.SaveChangesAsync();
+            _logger.LogInformation($"Data record employee {id} telah diperbarui..");
 
             return existingEmploy.ResConvert();
         }
@@ -102,6 +106,8 @@ namespace EmployeeManagementAPI.Services
             employee.IsDeleted = 1;
             RemoveCache(id);
             await _context.SaveChangesAsync();
+
+            _logger.LogInformation($"Menghapus employee {id} dari record..");
         }
 
         public async Task<bool> EmployeeExistsAsync(string id)
