@@ -39,6 +39,7 @@ namespace EmployeeManagementAPI.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin,SuperUser")]
         public async Task<IActionResult> PutStClass(string id, ReqClassDTO stClass)
         {
             if (!await _stClassService.ClassExistsAsync(id))
@@ -59,6 +60,7 @@ namespace EmployeeManagementAPI.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin,SuperUser")]
         public async Task<ActionResult<ResClassDTO>> PostStClass(ReqClassDTO stClass)
         {
             var createdClass = await _stClassService.CreateClassAsync(stClass);
@@ -66,6 +68,7 @@ namespace EmployeeManagementAPI.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin,SuperUser")]
         public async Task<IActionResult> DeleteStClass(string id)
         {
             var stClass = await _stClassService.GetClassByIdAsync(id);

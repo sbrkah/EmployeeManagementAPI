@@ -11,7 +11,7 @@ namespace EmployeeManagementAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class StStatusController : ControllerBase
     {
         private readonly IStStatusService _stStatusService;
@@ -39,6 +39,7 @@ namespace EmployeeManagementAPI.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin,SuperUser")]
         public async Task<IActionResult> PutStStatus(string id, ReqStatusDTO stStatus)
         {
             if (!await _stStatusService.StatusExistsAsync(id))
@@ -59,6 +60,7 @@ namespace EmployeeManagementAPI.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin,SuperUser")]
         public async Task<ActionResult<ResStatusDTO>> PostStStatus(ReqStatusDTO stStatus)
         {
             var createdStatus = await _stStatusService.CreateStatusAsync(stStatus);
@@ -66,6 +68,7 @@ namespace EmployeeManagementAPI.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin,SuperUser")]
         public async Task<IActionResult> DeleteStStatus(string id)
         {
             var stStatus = await _stStatusService.GetStatusByIdAsync(id);

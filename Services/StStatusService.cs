@@ -1,6 +1,8 @@
 ﻿using EmployeeManagementAPI.Models;
 using EmployeeManagementAPI.Models.DTO;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using Newtonsoft.Json;
 
 namespace EmployeeManagementAPI.Services
 {
@@ -17,10 +19,21 @@ namespace EmployeeManagementAPI.Services
     public class StStatusService : IStStatusService
     {
         private readonly EmanagerContext _context;
+        private readonly IDistributedCache _cache;
+        private readonly TimeSpan _cacheExpiry = TimeSpan.FromMinutes(15);
 
-        public StStatusService(EmanagerContext context)
+        public StStatusService(EmanagerContext context, IDistributedCache cache)
         {
             _context = context;
+            _cache = cache;
+        }
+
+        public async void RemoveCache(string id)
+        {
+            if (await _cache.GetStringAsync($"Status_{id}") != null)
+            {
+                await _cache.RemoveAsync($"Status_{id}");
+            }
         }
 
         public async Task<IEnumerable<ResStatusDTO>> GetAllStatusesAsync()
@@ -34,11 +47,26 @@ namespace EmployeeManagementAPI.Services
 
         public async Task<ResStatusDTO> GetStatusByIdAsync(string id)
         {
+            string cacheKey = $"Status_{id}";
+            var cachedItem = await _cache.GetStringAsync(cacheKey);
+            if (cachedItem != null)
+            {
+                return JsonConvert.DeserializeObject<ResStatusDTO>(cachedItem);
+            }
+
             var stats = await _context.StStatuses
                     .FirstOrDefaultAsync(x => x.IsDeleted == 0 && x.Id == id)
                     ?? throw new KeyNotFoundException($"Status with ID {id} not found");
 
-            return stats.ResConvert();
+            ResStatusDTO resStats = stats.ResConvert();
+
+            await _cache.SetStringAsync(
+                cacheKey,
+                JsonConvert.SerializeObject(resStats),
+                new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = _cacheExpiry }
+            );
+
+            return resStats;
         }
 
         public async Task<ResStatusDTO> CreateStatusAsync(ReqStatusDTO reqStatus)
@@ -57,6 +85,7 @@ namespace EmployeeManagementAPI.Services
 
             var updatedStatus = reqStatus.MainConvert();
             updatedStatus.Id = id; // Preserve original ID
+            RemoveCache(id);
 
             _context.Entry(existingStats).CurrentValues.SetValues(updatedStatus);
             await _context.SaveChangesAsync();
@@ -72,7 +101,9 @@ namespace EmployeeManagementAPI.Services
 
             stStats.IsDeleted = 1;
             await _context.SaveChangesAsync();
+            RemoveCache(id);
 
+            // Change Status Data on Employee
             List<TEmployee> employees = await _context.TEmployees.Where(x => x.Status == id).ToListAsync();
 
             foreach (TEmployee emp in employees)
