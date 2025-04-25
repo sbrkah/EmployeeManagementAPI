@@ -1,4 +1,6 @@
 
+using EmployeeManagementAPI.Models;
+
 namespace EmployeeManagementAPI
 {
     public class Program
@@ -13,6 +15,7 @@ namespace EmployeeManagementAPI
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+            builder.Services.AddDbContext<EmanagerContext>();
 
             var app = builder.Build();
 
