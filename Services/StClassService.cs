@@ -1,6 +1,8 @@
 ﻿using EmployeeManagementAPI.Models;
 using EmployeeManagementAPI.Models.DTO;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using Newtonsoft.Json;
 
 namespace EmployeeManagementAPI.Services
 {
@@ -16,11 +18,22 @@ namespace EmployeeManagementAPI.Services
 
     public class StClassService : IStClassService
     {
+        private readonly IDistributedCache _cache;
         private readonly EmanagerContext _context;
+        private readonly TimeSpan _cacheExpiry = TimeSpan.FromMinutes(15);
 
-        public StClassService(EmanagerContext context)
+        public StClassService(EmanagerContext context, IDistributedCache cache)
         {
             _context = context;
+            _cache = cache;
+        }
+
+        public async void RemoveCache(string id)
+        {
+            if (await _cache.GetStringAsync($"Class_{id}") != null)
+            {
+                await _cache.RemoveAsync($"Class_{id}");
+            }
         }
 
         public async Task<IEnumerable<ResClassDTO>> GetAllClassesAsync()
@@ -34,11 +47,26 @@ namespace EmployeeManagementAPI.Services
 
         public async Task<ResClassDTO> GetClassByIdAsync(string id)
         {
+            string cacheKey = $"Class_{id}";
+            var cachedItem = await _cache.GetStringAsync(cacheKey);
+            if(cachedItem != null)
+            {
+                return JsonConvert.DeserializeObject<ResClassDTO>(cachedItem);
+            }
+
             var stClass = await _context.StClasses
                 .FirstOrDefaultAsync(x => x.IsDeleted == 0 && x.Id == id)
                 ?? throw new KeyNotFoundException($"Class with ID {id} not found");
 
-            return stClass.ResConvert();
+            ResClassDTO resCLass = stClass.ResConvert();
+
+            await _cache.SetStringAsync(
+                cacheKey,
+                JsonConvert.SerializeObject(resCLass),
+                new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = _cacheExpiry }
+            );
+
+            return resCLass;
         }
 
         public async Task<ResClassDTO> CreateClassAsync(ReqClassDTO reqClass)
@@ -57,6 +85,7 @@ namespace EmployeeManagementAPI.Services
 
             var updatedClass = reqClass.MainConvert();
             updatedClass.Id = id; // Preserve original ID
+            RemoveCache(id);
 
             _context.Entry(existingClass).CurrentValues.SetValues(updatedClass);
             await _context.SaveChangesAsync();
@@ -72,6 +101,7 @@ namespace EmployeeManagementAPI.Services
 
             stClass.IsDeleted = 1;
             await _context.SaveChangesAsync();
+            RemoveCache(id);
 
             List<TEmployee> employees = await _context.TEmployees.Where(x => x.Class == id).ToListAsync();
 

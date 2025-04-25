@@ -81,6 +81,12 @@ namespace EmployeeManagementAPI
             builder.Services.AddScoped<ITEmployeeService, TEmployeeService>();
             builder.Services.AddScoped<AuthService>();
 
+            builder.Services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = builder.Configuration.GetConnectionString("Redis");
+                options.InstanceName = "EmployeeManagementApp_";
+            });
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
