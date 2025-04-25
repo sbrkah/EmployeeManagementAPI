@@ -46,15 +46,15 @@ Contoh: `Active`, `On Leave`, `Resigned`
 
 ---
 
-## 🧠 Redis Cache (Opsional)
+## 🧠 Redis Cache
 
-Proyek ini mendukung **Redis** sebagai cache untuk meningkatkan performa, terutama pada data yang sering diakses seperti:
+Proyek ini mendukung **Redis** sebagai cache untuk meningkatkan performa, terutama pada data yang sering diakses
+Pastikan Docker terinstall untuk menjalankan proyek ini.
 
-- Data quote harian dari API eksternal
 - Caching data employee untuk mengurangi query DB berulang
 
 ### 🔧 Cara Setup Redis:
 
 1. **Install Redis** (local atau pakai container Docker):
    ```bash
-   docker run -d -p 6379:6379 --name redis redis
+   docker-compose run
