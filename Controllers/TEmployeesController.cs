@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+using EmployeeManagementAPI.Models;
+using EmployeeManagementAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using EmployeeManagementAPI.Models;
 
 namespace EmployeeManagementAPI.Controllers
 {
@@ -13,109 +11,78 @@ namespace EmployeeManagementAPI.Controllers
     [ApiController]
     public class TEmployeesController : ControllerBase
     {
-        private readonly EmanagerContext _context;
+        private readonly ITEmployeeService _employeeService;
 
-        public TEmployeesController(EmanagerContext context)
+        public TEmployeesController(ITEmployeeService employeeService)
         {
-            _context = context;
+            _employeeService = employeeService;
         }
 
-        // GET: api/TEmployees
         [HttpGet]
         public async Task<ActionResult<IEnumerable<TEmployee>>> GetTEmployees()
         {
-            return await _context.TEmployees.ToListAsync();
+            return Ok(await _employeeService.GetAllEmployeesAsync());
         }
 
-        // GET: api/TEmployees/5
         [HttpGet("{id}")]
         public async Task<ActionResult<TEmployee>> GetTEmployee(string id)
         {
-            var tEmployee = await _context.TEmployees.FindAsync(id);
-
-            if (tEmployee == null)
+            var employee = await _employeeService.GetEmployeeByIdAsync(id);
+            if (employee == null)
             {
                 return NotFound();
             }
-
-            return tEmployee;
+            return employee;
         }
 
-        // PUT: api/TEmployees/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutTEmployee(string id, TEmployee tEmployee)
+        public async Task<IActionResult> PutTEmployee(string id, TEmployee employee)
         {
-            if (id != tEmployee.Id)
+            if (id != employee.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(tEmployee).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!TEmployeeExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        // POST: api/TEmployees
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<TEmployee>> PostTEmployee(TEmployee tEmployee)
-        {
-            _context.TEmployees.Add(tEmployee);
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
-            {
-                if (TEmployeeExists(tEmployee.Id))
-                {
-                    return Conflict();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return CreatedAtAction("GetTEmployee", new { id = tEmployee.Id }, tEmployee);
-        }
-
-        // DELETE: api/TEmployees/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteTEmployee(string id)
-        {
-            var tEmployee = await _context.TEmployees.FindAsync(id);
-            if (tEmployee == null)
+            if (!await _employeeService.EmployeeExistsAsync(id))
             {
                 return NotFound();
             }
 
-            _context.TEmployees.Remove(tEmployee);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _employeeService.UpdateEmployeeAsync(id, employee);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw;
+            }
 
             return NoContent();
         }
 
-        private bool TEmployeeExists(string id)
+        [HttpPost]
+        public async Task<ActionResult<TEmployee>> PostTEmployee(TEmployee employee)
         {
-            return _context.TEmployees.Any(e => e.Id == id);
+            if (await _employeeService.EmployeeExistsAsync(employee.Id))
+            {
+                return Conflict();
+            }
+
+            var createdEmployee = await _employeeService.CreateEmployeeAsync(employee);
+            return CreatedAtAction("GetTEmployee", new { id = createdEmployee.Id }, createdEmployee);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteTEmployee(string id)
+        {
+            var employee = await _employeeService.GetEmployeeByIdAsync(id);
+            if (employee == null)
+            {
+                return NotFound();
+            }
+
+            await _employeeService.DeleteEmployeeAsync(id);
+            return NoContent();
         }
     }
 }

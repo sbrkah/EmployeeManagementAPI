@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+using EmployeeManagementAPI.Models;
+using EmployeeManagementAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using EmployeeManagementAPI.Models;
 
 namespace EmployeeManagementAPI.Controllers
 {
@@ -13,36 +11,30 @@ namespace EmployeeManagementAPI.Controllers
     [ApiController]
     public class StClassesController : ControllerBase
     {
-        private readonly EmanagerContext _context;
+        private readonly IStClassService _stClassService;
 
-        public StClassesController(EmanagerContext context)
+        public StClassesController(IStClassService stClassService)
         {
-            _context = context;
+            _stClassService = stClassService;
         }
 
-        // GET: api/StClasses
         [HttpGet]
         public async Task<ActionResult<IEnumerable<StClass>>> GetStClasses()
         {
-            return await _context.StClasses.ToListAsync();
+            return Ok(await _stClassService.GetAllClassesAsync());
         }
 
-        // GET: api/StClasses/5
         [HttpGet("{id}")]
         public async Task<ActionResult<StClass>> GetStClass(string id)
         {
-            var stClass = await _context.StClasses.FindAsync(id);
-
+            var stClass = await _stClassService.GetClassByIdAsync(id);
             if (stClass == null)
             {
                 return NotFound();
             }
-
             return stClass;
         }
 
-        // PUT: api/StClasses/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutStClass(string id, StClass stClass)
         {
@@ -51,71 +43,46 @@ namespace EmployeeManagementAPI.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(stClass).State = EntityState.Modified;
+            if (!await _stClassService.ClassExistsAsync(id))
+            {
+                return NotFound();
+            }
 
             try
             {
-                await _context.SaveChangesAsync();
+                await _stClassService.UpdateClassAsync(id, stClass);
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!StClassExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                throw;
             }
 
             return NoContent();
         }
 
-        // POST: api/StClasses
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<StClass>> PostStClass(StClass stClass)
         {
-            _context.StClasses.Add(stClass);
-            try
+            if (await _stClassService.ClassExistsAsync(stClass.Id))
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
-            {
-                if (StClassExists(stClass.Id))
-                {
-                    return Conflict();
-                }
-                else
-                {
-                    throw;
-                }
+                return Conflict();
             }
 
-            return CreatedAtAction("GetStClass", new { id = stClass.Id }, stClass);
+            var createdClass = await _stClassService.CreateClassAsync(stClass);
+            return CreatedAtAction("GetStClass", new { id = createdClass.Id }, createdClass);
         }
 
-        // DELETE: api/StClasses/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteStClass(string id)
         {
-            var stClass = await _context.StClasses.FindAsync(id);
+            var stClass = await _stClassService.GetClassByIdAsync(id);
             if (stClass == null)
             {
                 return NotFound();
             }
 
-            _context.StClasses.Remove(stClass);
-            await _context.SaveChangesAsync();
-
+            await _stClassService.DeleteClassAsync(id);
             return NoContent();
-        }
-
-        private bool StClassExists(string id)
-        {
-            return _context.StClasses.Any(e => e.Id == id);
         }
     }
 }
