@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using EmployeeManagementAPI.Models;
+using EmployeeManagementAPI.Models.DTO;
 using EmployeeManagementAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +26,7 @@ namespace EmployeeManagementAPI.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<StStatus>> GetStStatus(string id)
+        public async Task<ActionResult<ResStatusDTO>> GetStStatus(string id)
         {
             var stStatus = await _stStatusService.GetStatusByIdAsync(id);
             if (stStatus == null)
@@ -36,13 +37,8 @@ namespace EmployeeManagementAPI.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutStStatus(string id, StStatus stStatus)
+        public async Task<IActionResult> PutStStatus(string id, ReqStatusDTO stStatus)
         {
-            if (id != stStatus.Id)
-            {
-                return BadRequest();
-            }
-
             if (!await _stStatusService.StatusExistsAsync(id))
             {
                 return NotFound();
@@ -61,13 +57,8 @@ namespace EmployeeManagementAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<StStatus>> PostStStatus(StStatus stStatus)
+        public async Task<ActionResult<ResStatusDTO>> PostStStatus(ReqStatusDTO stStatus)
         {
-            if (await _stStatusService.StatusExistsAsync(stStatus.Id))
-            {
-                return Conflict();
-            }
-
             var createdStatus = await _stStatusService.CreateStatusAsync(stStatus);
             return CreatedAtAction("GetStStatus", new { id = createdStatus.Id }, createdStatus);
         }

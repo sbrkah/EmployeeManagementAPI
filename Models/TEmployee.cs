@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EmployeeManagementAPI.Models.DTO;
+using System;
 using System.Collections.Generic;
 
 namespace EmployeeManagementAPI.Models;
@@ -9,7 +10,7 @@ public partial class TEmployee
 
     public string? Name { get; set; }
 
-    public decimal? Class { get; set; }
+    public string? Class { get; set; }
 
     public decimal? Age { get; set; }
 
@@ -17,5 +18,18 @@ public partial class TEmployee
 
     public decimal? IsDeleted { get; set; }
 
-    public decimal? Status { get; set; }
+    public string? Status { get; set; }
+
+    public ResEmployeeDTO ResConvert()
+    {
+        return new ResEmployeeDTO()
+        {
+            Id = Id,
+            Name = Name,
+            Class = Class,
+            Age = Age,
+            Salary = Salary,
+            Status = Status,
+        };
+    }
 }

@@ -1,14 +1,15 @@
 ﻿using EmployeeManagementAPI.Models;
+using EmployeeManagementAPI.Models.DTO;
 using Microsoft.EntityFrameworkCore;
 
 namespace EmployeeManagementAPI.Services
 {
     public interface IStClassService
     {
-        Task<IEnumerable<StClass>> GetAllClassesAsync();
-        Task<StClass> GetClassByIdAsync(string id);
-        Task<StClass> CreateClassAsync(StClass stClass);
-        Task UpdateClassAsync(string id, StClass stClass);
+        Task<IEnumerable<ResClassDTO>> GetAllClassesAsync();
+        Task<ResClassDTO> GetClassByIdAsync(string id);
+        Task<ResClassDTO> CreateClassAsync(ReqClassDTO stClass);
+        Task<ResClassDTO> UpdateClassAsync(string id, ReqClassDTO stClass);
         Task DeleteClassAsync(string id);
         Task<bool> ClassExistsAsync(string id);
     }
@@ -16,47 +17,67 @@ namespace EmployeeManagementAPI.Services
     public class StClassService : IStClassService
     {
         private readonly EmanagerContext _context;
+
         public StClassService(EmanagerContext context)
         {
             _context = context;
         }
 
-        public async Task<IEnumerable<StClass>> GetAllClassesAsync()
+        public async Task<IEnumerable<ResClassDTO>> GetAllClassesAsync()
         {
-            return await _context.StClasses.ToListAsync();
+            var classes = await _context.StClasses
+                .Where(x => x.IsDeleted == 0)
+                .ToListAsync();
+
+            return classes.Select(x => x.ResConvert());
         }
 
-        public async Task<StClass> GetClassByIdAsync(string id)
+        public async Task<ResClassDTO> GetClassByIdAsync(string id)
         {
-            return await _context.StClasses.FindAsync(id);
+            var stClass = await _context.StClasses
+                .FirstOrDefaultAsync(x => x.IsDeleted == 0 && x.Id == id)
+                ?? throw new KeyNotFoundException($"Class with ID {id} not found");
+
+            return stClass.ResConvert();
         }
 
-        public async Task<StClass> CreateClassAsync(StClass stClass)
+        public async Task<ResClassDTO> CreateClassAsync(ReqClassDTO reqClass)
         {
-            _context.StClasses.Add(stClass);
+            var newClass = reqClass.MainConvert();
+            _context.StClasses.Add(newClass);
             await _context.SaveChangesAsync();
-            return stClass;
+            return newClass.ResConvert();
         }
 
-        public async Task UpdateClassAsync(string id, StClass stClass)
+        public async Task<ResClassDTO> UpdateClassAsync(string id, ReqClassDTO reqClass)
         {
-            _context.Entry(stClass).State = EntityState.Modified;
+            var existingClass = await _context.StClasses
+                .FirstOrDefaultAsync(x => x.Id == id && x.IsDeleted == 0)
+                ?? throw new KeyNotFoundException($"Class with ID {id} not found");
+
+            var updatedClass = reqClass.MainConvert();
+            updatedClass.Id = id; // Preserve original ID
+
+            _context.Entry(existingClass).CurrentValues.SetValues(updatedClass);
             await _context.SaveChangesAsync();
+
+            return existingClass.ResConvert();
         }
 
         public async Task DeleteClassAsync(string id)
         {
-            var stClass = await _context.StClasses.FindAsync(id);
-            if (stClass != null)
-            {
-                _context.StClasses.Remove(stClass);
-                await _context.SaveChangesAsync();
-            }
+            var stClass = await _context.StClasses
+                .FirstOrDefaultAsync(x => x.Id == id && x.IsDeleted == 0)
+                ?? throw new KeyNotFoundException($"Class with ID {id} not found");
+
+            stClass.IsDeleted = 1;
+            await _context.SaveChangesAsync();
         }
 
         public async Task<bool> ClassExistsAsync(string id)
         {
-            return await _context.StClasses.AnyAsync(e => e.Id == id);
+            return await _context.StClasses
+                .AnyAsync(e => e.Id == id && e.IsDeleted == 0);
         }
     }
 }

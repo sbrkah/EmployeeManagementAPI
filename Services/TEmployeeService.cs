@@ -1,19 +1,20 @@
 ﻿using EmployeeManagementAPI.Models;
+using EmployeeManagementAPI.Models.DTO;
 using Microsoft.EntityFrameworkCore;
 
 namespace EmployeeManagementAPI.Services
 {
     public interface ITEmployeeService
     {
-        Task<IEnumerable<TEmployee>> GetAllEmployeesAsync();
-        Task<TEmployee> GetEmployeeByIdAsync(string id);
-        Task<TEmployee> CreateEmployeeAsync(TEmployee employee);
-        Task UpdateEmployeeAsync(string id, TEmployee employee);
+        Task<IEnumerable<ResEmployeeDTO>> GetAllEmployeesAsync();
+        Task<ResEmployeeDTO> GetEmployeeByIdAsync(string id);
+        Task<ResEmployeeDTO> CreateEmployeeAsync(ReqEmployeeDTO employee);
+        Task<ResEmployeeDTO> UpdateEmployeeAsync(string id, ReqEmployeeDTO employee);
         Task DeleteEmployeeAsync(string id);
         Task<bool> EmployeeExistsAsync(string id);
     }
 
-    public class TEmployeeService
+    public class TEmployeeService : ITEmployeeService
     {
         private readonly EmanagerContext _context;
 
@@ -22,42 +23,61 @@ namespace EmployeeManagementAPI.Services
             _context = context;
         }
 
-        public async Task<IEnumerable<TEmployee>> GetAllEmployeesAsync()
+        public async Task<IEnumerable<ResEmployeeDTO>> GetAllEmployeesAsync()
         {
-            return await _context.TEmployees.ToListAsync();
+            var employees = await _context.TEmployees
+                .Where(x => x.IsDeleted == 0)
+                .ToListAsync();
+
+            return employees.Select(x => x.ResConvert());
         }
 
-        public async Task<TEmployee> GetEmployeeByIdAsync(string id)
+        public async Task<ResEmployeeDTO> GetEmployeeByIdAsync(string id)
         {
-            return await _context.TEmployees.FindAsync(id);
+            var employee = await _context.TEmployees
+                .FirstOrDefaultAsync(x => x.IsDeleted == 0 && x.Id == id)
+                ?? throw new KeyNotFoundException($"Employee with ID {id} not found");
+
+            return employee.ResConvert();
         }
 
-        public async Task<TEmployee> CreateEmployeeAsync(TEmployee employee)
+        public async Task<ResEmployeeDTO> CreateEmployeeAsync(ReqEmployeeDTO employee)
         {
-            _context.TEmployees.Add(employee);
+            var newEmploy = employee.MainConvert();
+            _context.TEmployees.Add(newEmploy);
             await _context.SaveChangesAsync();
-            return employee;
+            return newEmploy.ResConvert();
         }
 
-        public async Task UpdateEmployeeAsync(string id, TEmployee employee)
+        public async Task<ResEmployeeDTO> UpdateEmployeeAsync(string id, ReqEmployeeDTO employee)
         {
-            _context.Entry(employee).State = EntityState.Modified;
+            var existingEmploy = await _context.TEmployees
+                .FirstOrDefaultAsync(x => x.Id == id && x.IsDeleted == 0)
+                ?? throw new KeyNotFoundException($"Employee with ID {id} not found");
+
+            var updatedEmployee = employee.MainConvert();
+            updatedEmployee.Id = id; // Preserve original ID
+
+            _context.Entry(existingEmploy).CurrentValues.SetValues(updatedEmployee);
             await _context.SaveChangesAsync();
+
+            return existingEmploy.ResConvert();
         }
 
         public async Task DeleteEmployeeAsync(string id)
         {
-            var employee = await _context.TEmployees.FindAsync(id);
-            if (employee != null)
-            {
-                _context.TEmployees.Remove(employee);
-                await _context.SaveChangesAsync();
-            }
+            var employee = await _context.TEmployees
+                .FirstOrDefaultAsync(x => x.Id == id && x.IsDeleted == 0)
+                ?? throw new KeyNotFoundException($"Employee with ID {id} not found");
+
+            employee.IsDeleted = 1;
+            await _context.SaveChangesAsync();
         }
 
         public async Task<bool> EmployeeExistsAsync(string id)
         {
-            return await _context.TEmployees.AnyAsync(e => e.Id == id);
+            return await _context.TEmployees
+                .AnyAsync(e => e.Id == id && e.IsDeleted == 0);
         }
     }
 }

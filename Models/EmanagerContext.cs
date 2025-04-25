@@ -105,7 +105,8 @@ public partial class EmanagerContext : DbContext
                 .HasColumnType("numeric(38, 0)")
                 .HasColumnName("age");
             entity.Property(e => e.Class)
-                .HasColumnType("numeric(38, 0)")
+                .HasMaxLength(36)
+                .IsUnicode(false)
                 .HasColumnName("class");
             entity.Property(e => e.IsDeleted)
                 .HasColumnType("numeric(38, 0)")
@@ -118,7 +119,8 @@ public partial class EmanagerContext : DbContext
                 .HasColumnType("numeric(38, 0)")
                 .HasColumnName("salary");
             entity.Property(e => e.Status)
-                .HasColumnType("numeric(38, 0)")
+                .HasMaxLength(36)
+                .IsUnicode(false)
                 .HasColumnName("status");
         });
 

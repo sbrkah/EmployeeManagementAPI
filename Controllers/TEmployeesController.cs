@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using EmployeeManagementAPI.Models;
+using EmployeeManagementAPI.Models.DTO;
 using EmployeeManagementAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -19,13 +20,13 @@ namespace EmployeeManagementAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TEmployee>>> GetTEmployees()
+        public async Task<ActionResult<IEnumerable<ResEmployeeDTO>>> GetTEmployees()
         {
             return Ok(await _employeeService.GetAllEmployeesAsync());
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<TEmployee>> GetTEmployee(string id)
+        public async Task<ActionResult<ResEmployeeDTO>> GetTEmployee(string id)
         {
             var employee = await _employeeService.GetEmployeeByIdAsync(id);
             if (employee == null)
@@ -36,13 +37,8 @@ namespace EmployeeManagementAPI.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutTEmployee(string id, TEmployee employee)
+        public async Task<IActionResult> PutTEmployee(string id, ReqEmployeeDTO employee)
         {
-            if (id != employee.Id)
-            {
-                return BadRequest();
-            }
-
             if (!await _employeeService.EmployeeExistsAsync(id))
             {
                 return NotFound();
@@ -61,13 +57,8 @@ namespace EmployeeManagementAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<TEmployee>> PostTEmployee(TEmployee employee)
+        public async Task<ActionResult<ResEmployeeDTO>> PostTEmployee(ReqEmployeeDTO employee)
         {
-            if (await _employeeService.EmployeeExistsAsync(employee.Id))
-            {
-                return Conflict();
-            }
-
             var createdEmployee = await _employeeService.CreateEmployeeAsync(employee);
             return CreatedAtAction("GetTEmployee", new { id = createdEmployee.Id }, createdEmployee);
         }

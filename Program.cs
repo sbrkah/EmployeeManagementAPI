@@ -17,9 +17,9 @@ namespace EmployeeManagementAPI
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddDbContext<EmanagerContext>();
+            builder.Services.AddScoped<IStClassService, StClassService>();
             builder.Services.AddScoped<IStStatusService, StStatusService>();
-            builder.Services.AddScoped<IStStatusService, StStatusService>();
-            builder.Services.AddScoped<IStStatusService, StStatusService>();
+            builder.Services.AddScoped<ITEmployeeService, TEmployeeService>();
 
             var app = builder.Build();
 

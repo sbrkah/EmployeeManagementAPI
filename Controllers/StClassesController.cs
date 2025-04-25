@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using EmployeeManagementAPI.Models;
+using EmployeeManagementAPI.Models.DTO;
 using EmployeeManagementAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -19,13 +20,13 @@ namespace EmployeeManagementAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<StClass>>> GetStClasses()
+        public async Task<ActionResult<IEnumerable<ResClassDTO>>> GetStClasses()
         {
             return Ok(await _stClassService.GetAllClassesAsync());
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<StClass>> GetStClass(string id)
+        public async Task<ActionResult<ResClassDTO>> GetStClass(string id)
         {
             var stClass = await _stClassService.GetClassByIdAsync(id);
             if (stClass == null)
@@ -36,13 +37,8 @@ namespace EmployeeManagementAPI.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutStClass(string id, StClass stClass)
+        public async Task<IActionResult> PutStClass(string id, ReqClassDTO stClass)
         {
-            if (id != stClass.Id)
-            {
-                return BadRequest();
-            }
-
             if (!await _stClassService.ClassExistsAsync(id))
             {
                 return NotFound();
@@ -61,13 +57,8 @@ namespace EmployeeManagementAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<StClass>> PostStClass(StClass stClass)
+        public async Task<ActionResult<ResClassDTO>> PostStClass(ReqClassDTO stClass)
         {
-            if (await _stClassService.ClassExistsAsync(stClass.Id))
-            {
-                return Conflict();
-            }
-
             var createdClass = await _stClassService.CreateClassAsync(stClass);
             return CreatedAtAction("GetStClass", new { id = createdClass.Id }, createdClass);
         }
