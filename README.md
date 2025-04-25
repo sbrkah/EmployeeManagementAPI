@@ -41,8 +41,8 @@ Contoh: `Active`, `On Leave`, `Resigned`
 3. Token menyimpan informasi akses: `AccessLevel`.
 4. Sistem menyesuaikan fitur berdasarkan level akses:
    - `User`: hanya bisa melihat data
-   - `Admin`: bisa tambah/edit/hapus employee
-   - `Superuser`: akses penuh termasuk pengaturan akun
+   - `Admin`: bisa tambah/edit/hapus data serta membuat akun dengan level `User`
+   - `Superuser`: akses penuh termasuk membuat akun dengan level `Admin` dan `User`
 
 ---
 
